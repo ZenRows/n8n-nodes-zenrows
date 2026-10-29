@@ -3,6 +3,7 @@ import { batchJobCreateDescription } from './create';
 import { batchJobGetManyDescription } from './getAll';
 import { batchJobGetResultsDescription } from './getResults';
 import { jobIdField } from './jobId';
+import { cursorPagination } from './pagination';
 
 const showOnlyForBatchJob = {
 	resource: ['batchJob'],
@@ -47,6 +48,13 @@ export const batchJobDescription: INodeProperties[] = [
 						baseURL,
 						url: '=/jobs/{{ $parameter.jobId }}',
 					},
+					// The API answers a delete with an empty body, which would
+					// reach the workflow as a blank item.
+					output: {
+						postReceive: [
+							{ type: 'set', properties: { value: '={{ { "success": true } }}' } },
+						],
+					},
 				},
 			},
 			{
@@ -73,6 +81,10 @@ export const batchJobDescription: INodeProperties[] = [
 						baseURL,
 						url: '/jobs',
 					},
+					operations: cursorPagination,
+					output: {
+						postReceive: [{ type: 'rootProperty', properties: { property: 'jobs' } }],
+					},
 				},
 			},
 			{
@@ -85,6 +97,10 @@ export const batchJobDescription: INodeProperties[] = [
 						method: 'GET',
 						baseURL,
 						url: '=/jobs/{{ $parameter.jobId }}/results',
+					},
+					operations: cursorPagination,
+					output: {
+						postReceive: [{ type: 'rootProperty', properties: { property: 'results' } }],
 					},
 				},
 			},

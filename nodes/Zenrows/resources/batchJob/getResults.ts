@@ -1,9 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-
-const showOnlyForGetResults = {
-	resource: ['batchJob'],
-	operation: ['getResults'],
-};
+import { paginationFields } from './pagination';
 
 export const batchJobGetResultsDescription: INodeProperties[] = [
 	{
@@ -17,16 +13,8 @@ export const batchJobGetResultsDescription: INodeProperties[] = [
 			{ name: 'Failed', value: 'failed' },
 			{ name: 'Successful', value: 'successful' },
 		],
-		displayOptions: { show: showOnlyForGetResults },
+		displayOptions: { show: { resource: ['batchJob'], operation: ['getResults'] } },
 		routing: { send: { type: 'query', property: 'status' } },
 	},
-	{
-		displayName: 'Cursor',
-		name: 'cursor',
-		type: 'string',
-		default: '',
-		description: 'The next_cursor from the previous page. Leave it empty for the first page.',
-		displayOptions: { show: showOnlyForGetResults },
-		routing: { send: { type: 'query', property: 'cursor' } },
-	},
+	...paginationFields('getResults'),
 ];
