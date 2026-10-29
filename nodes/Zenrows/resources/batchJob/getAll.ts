@@ -1,4 +1,4 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { paginationFields } from './pagination';
+import { paginationFields } from '../../shared/pagination';
 
-export const batchJobGetManyDescription: INodeProperties[] = [...paginationFields('getAll')];
+export const batchJobGetManyDescription: INodeProperties[] = [...paginationFields('batchJob', 'getAll')];

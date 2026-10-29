@@ -3,7 +3,7 @@ import { batchJobCreateDescription } from './create';
 import { batchJobGetManyDescription } from './getAll';
 import { batchJobGetResultsDescription } from './getResults';
 import { jobIdField } from './jobId';
-import { cursorPagination } from './pagination';
+import { cursorPagination } from '../../shared/pagination';
 
 const showOnlyForBatchJob = {
 	resource: ['batchJob'],

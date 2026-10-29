@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { paginationFields } from './pagination';
+import { paginationFields } from '../../shared/pagination';
 
 export const batchJobGetResultsDescription: INodeProperties[] = [
 	{
@@ -16,5 +16,5 @@ export const batchJobGetResultsDescription: INodeProperties[] = [
 		displayOptions: { show: { resource: ['batchJob'], operation: ['getResults'] } },
 		routing: { send: { type: 'query', property: 'status' } },
 	},
-	...paginationFields('getResults'),
+	...paginationFields('batchJob', 'getResults'),
 ];
