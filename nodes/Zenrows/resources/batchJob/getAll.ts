@@ -1,13 +1,4 @@
 import type { INodeProperties } from 'n8n-workflow';
+import { paginationFields } from './pagination';
 
-export const batchJobGetManyDescription: INodeProperties[] = [
-	{
-		displayName: 'Cursor',
-		name: 'cursor',
-		type: 'string',
-		default: '',
-		description: 'The next_cursor from the previous page. Leave it empty for the first page.',
-		displayOptions: { show: { resource: ['batchJob'], operation: ['getAll'] } },
-		routing: { send: { type: 'query', property: 'cursor' } },
-	},
-];
+export const batchJobGetManyDescription: INodeProperties[] = [...paginationFields('getAll')];

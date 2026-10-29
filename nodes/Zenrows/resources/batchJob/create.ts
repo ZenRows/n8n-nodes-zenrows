@@ -105,8 +105,11 @@ export const batchJobCreateDescription: INodeProperties[] = [
 			send: {
 				type: 'body',
 				property: 'tasks',
+				// Escaped twice on purpose: TypeScript would turn a single \\n into a
+				// real line break, and n8n would then parse an expression with a
+				// newline inside a string literal. The regex also takes CRLF.
 				value:
-					'={{ $value.split("\n").map((u) => u.trim()).filter((u) => u).map((u) => ({ url: u })) }}',
+					'={{ $value.split(/\\r?\\n/).map((u) => u.trim()).filter((u) => u).map((u) => ({ url: u })) }}',
 			},
 		},
 	},
