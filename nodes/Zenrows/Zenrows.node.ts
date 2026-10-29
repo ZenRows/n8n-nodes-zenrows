@@ -1,5 +1,6 @@
 import { NodeConnectionTypes, type INodeType, type INodeTypeDescription } from 'n8n-workflow';
 import { batchJobDescription } from './resources/batchJob';
+import { crawlDescription } from './resources/crawl';
 import { pageDescription } from './resources/page';
 
 export class Zenrows implements INodeType {
@@ -41,6 +42,10 @@ export class Zenrows implements INodeType {
 						value: 'batchJob',
 					},
 					{
+						name: 'Crawl',
+						value: 'crawl',
+					},
+					{
 						name: 'Page',
 						value: 'page',
 					},
@@ -48,6 +53,7 @@ export class Zenrows implements INodeType {
 				default: 'page',
 			},
 			...pageDescription,
+			...crawlDescription,
 			...batchJobDescription,
 		],
 	};

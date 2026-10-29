@@ -27,6 +27,23 @@ npm install n8n-nodes-zenrows
 
 **Scrape** defaults to Adaptive stealth mode, which starts with the cheapest setup that could work and escalates only when the site pushes back. You are billed for the attempt that succeeds, not for the ones before it. Switch Stealth Mode to Manual when you want to set JS Rendering and Premium Proxy yourself.
 
+### Crawl
+
+Crawl walks a site from one URL and collects the URLs it finds, optionally with each page's content.
+
+| Operation | What it does |
+|---|---|
+| **Create** | Starts a crawl from a URL and returns a `crawl_id`. |
+| **Get** | Reads a crawl, its status and its coverage so far. |
+| **Get Many** | Lists the crawls on the account, newest first. |
+| **Get Results** | Lists the URLs the crawl kept, one item each. |
+| **Get Page Content** | Returns one kept page under `data`, in the format it was crawled with. |
+| **Stop** | Ends a running crawl, keeping what it found. |
+
+Crawl has no fee of its own. Each page it opens is one Fetch request in Adaptive stealth mode, so 1 to 25 credits depending on the site, and **Max Pages** is what caps the bill.
+
+**Get Results only pages through a crawl that has ended.** While a crawl is running its `next_cursor` is never null, so following it would never stop. Poll **Get** until `status` leaves `running`, then read the results.
+
 ### Batch Job
 
 Batch runs the same work in the background, which is what you want for more URLs than a workflow should sit and wait for.
@@ -83,6 +100,7 @@ The free plan comes with 5,000 credits a month, always. See the [pricing page](h
 * [Zenrows documentation](https://docs.zenrows.com)
 * [Fetch API reference](https://docs.zenrows.com/fetch/api-reference)
 * [Extract](https://docs.zenrows.com/extract/setup)
+* [Crawl endpoints](https://docs.zenrows.com/crawl/endpoints)
 * [Batch REST API](https://docs.zenrows.com/batch/developer-guide-restapi)
 * [API error codes](https://docs.zenrows.com/api-error-codes)
 
@@ -90,7 +108,7 @@ The free plan comes with 5,000 credits a month, always. See the [pricing page](h
 
 | Version | Changes |
 |---|---|
-| 0.1.0 | First release. Page (Scrape, Extract Data) and Batch Job (Create, Get, Get Many, Get Results, Delete). |
+| 0.1.0 | First release. Page (Scrape, Extract Data), Crawl (Create, Get, Get Many, Get Results, Get Page Content, Stop) and Batch Job (Create, Get, Get Many, Get Results, Delete). |
 
 ## License
 
