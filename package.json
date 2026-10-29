@@ -1,5 +1,5 @@
 {
-	"name": "n8n-nodes-zenrows",
+	"name": "@zenrows/n8n-nodes-zenrows",
 	"version": "0.1.0",
 	"description": "n8n community node for Zenrows. Scrape pages with anti-bot bypass, JS rendering and proxy rotation, pull structured data out of them, crawl a site from one URL, and run the same work as a batch job.",
 	"license": "MIT",
@@ -27,6 +27,9 @@
 	},
 	"engines": {
 		"node": ">=20.19"
+	},
+	"publishConfig": {
+		"access": "public"
 	},
 	"scripts": {
 		"build": "n8n-node build",

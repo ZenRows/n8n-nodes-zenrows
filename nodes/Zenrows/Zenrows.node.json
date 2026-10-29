@@ -1,8 +1,11 @@
 {
-	"node": "n8n-nodes-zenrows.zenrows",
+	"node": "@zenrows/n8n-nodes-zenrows.zenrows",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
-	"categories": ["Data & Storage", "Development"],
+	"categories": [
+		"Data & Storage",
+		"Development"
+	],
 	"resources": {
 		"credentialDocumentation": [
 			{

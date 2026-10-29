@@ -1,4 +1,4 @@
-# Publishes n8n-nodes-zenrows to npm with a provenance statement.
+# Publishes @zenrows/n8n-nodes-zenrows to npm with a provenance statement.
 #
 # n8n stopped accepting locally published packages for verification on
 # 2026-05-01, so this workflow is the only way the package may reach npm.
