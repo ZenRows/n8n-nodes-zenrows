@@ -167,3 +167,32 @@ test('the node ships no runtime dependencies', () => {
 	assert.ok(pkg.keywords.includes('n8n-community-node-package'));
 	assert.equal(pkg.license, 'MIT');
 });
+
+test('the package name, the codex id and the n8n paths agree', () => {
+	const pkg = require('../package.json');
+	const codex = require('../dist/nodes/Zenrows/Zenrows.node.json');
+
+	assert.match(
+		pkg.name,
+		/^(@[^/]+\/)?n8n-nodes-/,
+		'n8n only discovers packages named n8n-nodes-* or @scope/n8n-nodes-*',
+	);
+	if (pkg.name.startsWith('@')) {
+		assert.equal(
+			pkg.publishConfig?.access,
+			'public',
+			'a scoped package publishes restricted by default, which hides it from everyone',
+		);
+	}
+	assert.equal(
+		codex.node,
+		`${pkg.name}.${description.name}`,
+		'the codex id is the package name plus the node name',
+	);
+	for (const entry of [...pkg.n8n.nodes, ...pkg.n8n.credentials]) {
+		assert.ok(
+			require('node:fs').existsSync(require('node:path').join(__dirname, '..', entry)),
+			`package.json points at ${entry}, which the build does not produce`,
+		);
+	}
+});

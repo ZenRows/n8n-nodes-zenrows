@@ -1,4 +1,4 @@
-# n8n-nodes-zenrows
+# @zenrows/n8n-nodes-zenrows
 
 An [n8n](https://n8n.io) community node for [Zenrows](https://www.zenrows.com), a web scraping API that gets past anti-bot systems, renders JavaScript and rotates proxies for you.
 
@@ -8,12 +8,12 @@ Without it, using Zenrows in n8n means an HTTP Request node and a hand-built URL
 
 ## Installation
 
-Follow the [community nodes installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) and enter `n8n-nodes-zenrows` as the package name.
+Follow the [community nodes installation guide](https://docs.n8n.io/integrations/community-nodes/installation/) and enter `@zenrows/n8n-nodes-zenrows` as the package name.
 
 On self-hosted n8n you can also install it from the command line:
 
 ```bash
-npm install n8n-nodes-zenrows
+npm install @zenrows/n8n-nodes-zenrows
 ```
 
 ## Operations
