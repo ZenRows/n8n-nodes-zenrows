@@ -3,26 +3,38 @@
 # n8n stopped accepting locally published packages for verification on
 # 2026-05-01, so this workflow is the only way the package may reach npm.
 #
-# `npm run release` is `n8n-node release`, which behaves differently in the two
-# places it runs:
-#   locally  - bumps the version, writes the changelog, commits, tags, pushes
-#              and opens a GitHub release. It does NOT publish.
-#   in CI    - detected through GITHUB_ACTIONS, runs lint and build and then
-#              publishes with NPM_CONFIG_PROVENANCE=true.
-# It is also the only thing that sets RELEASE_MODE, which the package's
-# prepublishOnly guard requires, so a plain `npm publish` is refused by design.
+# ─── WHY STAGING ───────────────────────────────────────────────────────────
+# This stages the release rather than publishing it outright. Staging needs
+# no 2FA and works with any token, while `npm stage approve` does need 2FA,
+# so the secret sitting in this repository cannot put code on the registry on
+# its own: a maintainer has to approve it. npm is also removing direct
+# publishing with a granular access token in January 2027, and warns against
+# the bypass-2fa tokens that make it work, so the direct route was never
+# worth building on.
 #
-# ─── FIRST PUBLISH ─────────────────────────────────────────────────────────
+# After a run, approve it from a machine with your 2FA:
+#
+#   npm stage list @zenrows/n8n-nodes-zenrows
+#   npm stage approve <stage-id>
+#
+# Nothing is on the registry until that second command succeeds.
+#
+# ─── TOKEN, AND GETTING RID OF IT ──────────────────────────────────────────
 # A trusted publisher can only be configured against a package that already
-# exists, so 0.1.0 goes up with a token:
-#   1. On npmjs.com, create a granular access token scoped to the @zenrows
-#      scope (not a package, which cannot be selected before it exists), with
-#      read and write.
+# exists, so the first release needs a token:
+#   1. On npmjs.com create a granular access token scoped to the @zenrows
+#      scope (not a package, which cannot be selected before it exists),
+#      with "Read and write (stage only)" and no 2FA bypass.
 #   2. Add it to this repository as the NPM_TOKEN secret.
 #   3. Publish a GitHub release for the version tag.
-# Afterwards, configure Trusted Publishers on the package pointing at this
-# workflow and delete the secret. npm is restricting 2FA-bypassing tokens for
-# direct publishing from January 2027, so this token route is temporary.
+# Once the package exists, configure Trusted Publishers against this workflow
+# and delete the secret. OIDC then authenticates the stage and no token is
+# involved at all.
+#
+# ─── CUTTING A RELEASE ─────────────────────────────────────────────────────
+# Locally, `npm run release` bumps the version, writes the changelog, commits,
+# tags, pushes and opens the GitHub release. It does not publish. Publishing
+# the release is what triggers this workflow.
 
 name: Release
 
@@ -33,11 +45,12 @@ on:
 
 permissions:
   contents: read
-  # Required to mint the OIDC token that signs the provenance attestation.
+  # Required to mint the OIDC token that signs the provenance attestation,
+  # which is needed even when npm authenticates with NPM_TOKEN.
   id-token: write
 
 jobs:
-  publish:
+  stage:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -46,10 +59,9 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
           cache: npm
-      # Node 24 ships npm 11.x, but trusted publishing needs 11.5.1 or later
-      # and the shipped patch version drifts. Without this a publish over OIDC
-      # falls back to token auth and 401s.
-      - run: npm install -g npm@^11.5.1
+      # `npm stage` is not in the npm that ships with Node 24, and trusted
+      # publishing needs 11.5.1 or later.
+      - run: npm install -g npm@^11.21.1
       # npm install, not npm ci. @n8n/node-cli pulls @langchain/community,
       # which wants ignore@^7 while npm hoists ignore@5 and deduplicates the
       # two, so npm refuses its own tree. An overrides field would settle it,
@@ -64,15 +76,22 @@ jobs:
             echo "tag $GITHUB_REF_NAME ($TAG) does not match package.json version $PKG"
             exit 1
           fi
+      - run: npm run lint
+      - run: npm run build
       - run: npm test
-      # Lint and build run inside `n8n-node release` as well; this publishes.
-      # With NPM_TOKEN unset the OIDC exchange is used instead, which is where
-      # this should end up once the package exists and has a trusted publisher.
-      - name: Publish with provenance
-        run: |
-          if [ -n "$NPM_TOKEN" ]; then
-            npm config set //registry.npmjs.org/:_authToken "$NPM_TOKEN"
-          fi
-          npm run release
+      - name: Stage the release with provenance
+        run: npm stage publish
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+          # prepublishOnly runs `n8n-node prerelease`, which refuses any
+          # publish that did not come through `n8n-node release`. That guard
+          # exists to stop a publish from someone's laptop; here the publish
+          # is the point.
+          RELEASE_MODE: true
+      - name: Say what is left to do
+        run: |
+          echo "Staged. Nothing is on the registry yet."
+          echo "Approve it with 2FA:"
+          echo "  npm stage list @zenrows/n8n-nodes-zenrows"
+          echo "  npm stage approve <stage-id>"
