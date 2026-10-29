@@ -33,7 +33,9 @@
 		"dev": "n8n-node dev",
 		"lint": "n8n-node lint",
 		"lint:fix": "n8n-node lint --fix",
-		"prepublishOnly": "n8n-node prerelease"
+		"prepublishOnly": "n8n-node prerelease",
+		"release": "n8n-node release",
+		"test": "node --test test/*.test.js"
 	},
 	"files": [
 		"dist",
@@ -52,6 +54,7 @@
 	"devDependencies": {
 		"@n8n/node-cli": "^0.54.4",
 		"prettier": "3.8.3",
+		"release-it": "^21.1.0",
 		"typescript": "5.9.3"
 	},
 	"peerDependencies": {
