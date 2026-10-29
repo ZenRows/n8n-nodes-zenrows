@@ -19,17 +19,17 @@
 #
 # Nothing is on the registry until that second command succeeds.
 #
-# ─── TOKEN, AND GETTING RID OF IT ──────────────────────────────────────────
-# A trusted publisher can only be configured against a package that already
-# exists, so the first release needs a token:
-#   1. On npmjs.com create a granular access token scoped to the @zenrows
-#      scope (not a package, which cannot be selected before it exists),
-#      with "Read and write (stage only)" and no 2FA bypass.
-#   2. Add it to this repository as the NPM_TOKEN secret.
-#   3. Publish a GitHub release for the version tag.
-# Once the package exists, configure Trusted Publishers against this workflow
-# and delete the secret. OIDC then authenticates the stage and no token is
-# involved at all.
+# ─── NO TOKEN ──────────────────────────────────────────────────────────────
+# npm authenticates this workflow over OIDC, against the trusted publisher
+# configured on the package for ZenRows/n8n-nodes-zenrows + release.yml, whose
+# permissions are npm stage publish and nothing else. There is no secret to
+# steal, and no secret to rotate.
+#
+# 0.1.0 went up with a short-lived NPM_TOKEN, because a trusted publisher
+# cannot be configured against a package that does not exist yet. That token
+# is gone. Note that setup-node deliberately has no registry-url here: it
+# would write an _authToken line into .npmrc, and an empty one is not the
+# same as none.
 #
 # ─── CUTTING A RELEASE ─────────────────────────────────────────────────────
 # Locally, `npm run release` bumps the version, writes the changelog, commits,
@@ -45,8 +45,8 @@ on:
 
 permissions:
   contents: read
-  # Required to mint the OIDC token that signs the provenance attestation,
-  # which is needed even when npm authenticates with NPM_TOKEN.
+  # Required twice over: to authenticate the publish, and to sign the
+  # provenance attestation.
   id-token: write
 
 jobs:
@@ -57,7 +57,6 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
           cache: npm
       # `npm stage` is not in the npm that ships with Node 24, and trusted
       # publishing needs 11.5.1 or later.
@@ -82,7 +81,6 @@ jobs:
       - name: Stage the release with provenance
         run: npm stage publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
           # prepublishOnly runs `n8n-node prerelease`, which refuses any
           # publish that did not come through `n8n-node release`. That guard
