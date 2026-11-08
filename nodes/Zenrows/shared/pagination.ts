@@ -42,8 +42,26 @@ export const endedCrawlPagination = {
 	},
 };
 
-/** The Return All / Limit pair n8n expects on every Get Many operation. */
-export const paginationFields = (resource: string, operation: string): INodeProperties[] => [
+/**
+ * How many results one request may bring back.
+ *
+ * A number is the endpoint's documented maximum for `limit`. `null` means the
+ * endpoint takes no `limit` at all, so its own page size decides.
+ */
+type LimitCeiling = number | null;
+
+/**
+ * The Return All / Limit pair n8n expects on every Get Many operation.
+ *
+ * `output.maxResults` only trims a reply the node already holds. Unless `limit`
+ * goes out in the query too, the request asks for the endpoint's own page size,
+ * and a Limit above it quietly returns less than it asked for.
+ */
+export const paginationFields = (
+	resource: string,
+	operation: string,
+	ceiling: LimitCeiling,
+): INodeProperties[] => [
 	{
 		displayName: 'Return All',
 		name: 'returnAll',
@@ -58,11 +76,17 @@ export const paginationFields = (resource: string, operation: string): INodeProp
 		name: 'limit',
 		type: 'number',
 		default: 50,
-		typeOptions: { minValue: 1 },
+		typeOptions: { minValue: 1, ...(ceiling === null ? {} : { maxValue: ceiling }) },
 		description: 'Max number of results to return',
 		displayOptions: {
 			show: { resource: [resource], operation: [operation], returnAll: [false] },
 		},
-		routing: { output: { maxResults: '={{ $value }}' } },
+		routing:
+			ceiling === null
+				? { output: { maxResults: '={{ $value }}' } }
+				: {
+						send: { type: 'query', property: 'limit' },
+						output: { maxResults: '={{ $value }}' },
+					},
 	},
 ];

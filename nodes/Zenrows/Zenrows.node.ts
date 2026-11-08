@@ -11,7 +11,7 @@ export class Zenrows implements INodeType {
 		group: ['input'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-		description: 'Scrape the web through Zenrows, past the anti-bot systems in the way',
+		description: 'Fetch pages, extract structured data and crawl sites with Zenrows',
 		defaults: {
 			name: 'Zenrows',
 		},
