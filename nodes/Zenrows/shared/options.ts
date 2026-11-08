@@ -45,6 +45,25 @@ const customHeaders: INodeProperties = {
 	routing: { send: { type: 'query', property: 'custom_headers' } },
 };
 
+const extractFields: INodeProperties = {
+	displayName: 'Fields',
+	name: 'extractFields',
+	type: 'string',
+	default: '',
+	placeholder: 'products.name,products.price',
+	description:
+		'Comma-separated fields to return, dot notated for a field inside a group. Leave it empty to get every field.',
+	routing: {
+		send: {
+			type: 'query',
+			property: 'extract_fields',
+			// n8n sets the query key whatever the value, and the API answers
+			// REQS004 to an empty extract_fields. undefined drops the key.
+			value: '={{ $value || undefined }}',
+		},
+	},
+};
+
 const jsInstructions: INodeProperties = {
 	displayName: 'JS Instructions',
 	name: 'jsInstructions',
@@ -118,7 +137,8 @@ const responseType: INodeProperties = {
 	name: 'responseType',
 	type: 'options',
 	default: 'markdown',
-	description: 'Convert the page before returning it, instead of handing back raw HTML',
+	description:
+		'Convert the page before returning it, instead of handing back raw HTML. PDF needs a browser, so it only works with Stealth Mode set to Manual and JS Rendering on.',
 	options: [
 		{ name: 'Markdown', value: 'markdown' },
 		{ name: 'PDF', value: 'pdf' },
@@ -165,6 +185,9 @@ const waitFor: INodeProperties = {
 	routing: { send: { type: 'query', property: 'wait_for' } },
 };
 
+/** Adaptive sets js_render and premium_proxy itself: sending either is a 400. */
+const manualOnly = { show: { '/mode': ['manual'] } };
+
 /** Everything Fetch accepts, for the Scrape operation. */
 export const scrapeOptions: INodeProperties = {
 	displayName: 'Options',
@@ -178,14 +201,14 @@ export const scrapeOptions: INodeProperties = {
 		cssExtractor,
 		customHeaders,
 		jsInstructions,
-		jsRender,
+		{ ...jsRender, displayOptions: manualOnly },
 		jsonResponse,
 		originalStatus,
 		outputs,
-		premiumProxy,
+		{ ...premiumProxy, displayOptions: manualOnly },
 		proxyCountry,
 		responseType,
-		screenshot,
+		{ ...screenshot, displayOptions: manualOnly },
 		sessionId,
 		wait,
 		waitFor,
@@ -204,6 +227,7 @@ export const extractOptions: INodeProperties = {
 	default: {},
 	options: [
 		customHeaders,
+		extractFields,
 		jsInstructions,
 		jsRender,
 		premiumProxy,

@@ -38,30 +38,12 @@ export const pageExtractDescription: INodeProperties[] = [
 			{
 				name: 'Standard',
 				value: 'standard',
-				description: 'Return the common schema shared across sites of this kind',
+				description:
+					'Return the schema shared across sites of a kind. Real estate only for now; anything else answers with an error.',
 			},
 		],
 		displayOptions: { show: showOnlyForExtract },
 		routing: { send: { type: 'query', property: 'extract' } },
-	},
-	{
-		displayName: 'Fields',
-		name: 'extractFields',
-		type: 'string',
-		default: '',
-		placeholder: 'price,title,reviews.rating',
-		description:
-			'Comma-separated fields to return, dot notated for a field inside a group. Leave it empty to get every field.',
-		displayOptions: { show: showOnlyForExtract },
-		routing: {
-			send: {
-				type: 'query',
-				property: 'extract_fields',
-				// n8n sets the query key whatever the value, and the API answers
-				// REQS004 to an empty extract_fields. undefined drops the key.
-				value: '={{ $value || undefined }}',
-			},
-		},
 	},
 	{
 		...extractOptions,

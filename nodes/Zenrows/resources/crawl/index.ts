@@ -72,7 +72,7 @@ export const crawlDescription: INodeProperties[] = [
 			{
 				name: 'Get Results',
 				value: 'getResults',
-				action: 'Get the ur ls a crawl found',
+				action: 'Get the results of a crawl',
 				description: 'List the URLs a crawl has kept, one item each',
 				routing: {
 					request: { method: 'GET', url: '=/crawls/{{ $parameter.crawlId }}' },
@@ -97,6 +97,7 @@ export const crawlDescription: INodeProperties[] = [
 	crawlIdField(['get', 'getPageContent', 'getResults', 'stop']),
 	contentIdField,
 	...crawlCreateDescription,
-	...paginationFields('crawl', 'getAll'),
-	...paginationFields('crawl', 'getResults'),
+	// GET /crawls takes limit 1 to 100, and GET /crawls/{id} up to 10,000.
+	...paginationFields('crawl', 'getAll', 100),
+	...paginationFields('crawl', 'getResults', 10000),
 ];

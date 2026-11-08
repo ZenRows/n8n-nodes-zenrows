@@ -196,3 +196,90 @@ test('the package name, the codex id and the n8n paths agree', () => {
 		);
 	}
 });
+
+test('Limit reaches the API instead of only trimming the reply', () => {
+	// n8n review: `output.maxResults` cuts a reply the node already has, so
+	// without `limit` in the query it asks for the endpoint's own page size. A
+	// Limit of 50 on Crawl > Get Many came back with 20 items.
+	const documentedMaximum = {
+		'crawl:getAll': 100,
+		'crawl:getResults': 10000,
+		'batchJob:getAll': 100,
+		// GET /jobs/{job_id}/results takes `status` and `cursor`, no `limit`.
+		'batchJob:getResults': null,
+	};
+
+	const found = {};
+	for (const p of props.filter((p) => p.name === 'limit')) {
+		const { resource, operation } = p.displayOptions.show;
+		found[`${resource[0]}:${operation[0]}`] = p;
+	}
+	assert.deepEqual(Object.keys(found).sort(), Object.keys(documentedMaximum).sort());
+
+	for (const [where, maximum] of Object.entries(documentedMaximum)) {
+		const p = found[where];
+		assert.equal(p.default, 50, `${where}: n8n expects a Limit default of 50`);
+		assert.ok(p.routing?.output?.maxResults, `${where}: still has to cap what it emits`);
+
+		if (maximum === null) {
+			assert.equal(p.routing.send, undefined, `${where}: this endpoint accepts no limit`);
+			assert.equal(p.typeOptions?.maxValue, undefined, `${where}: no maximum to advertise`);
+			continue;
+		}
+		assert.deepEqual(
+			{ type: p.routing.send?.type, property: p.routing.send?.property },
+			{ type: 'query', property: 'limit' },
+			`${where}: Limit never reaches the API`,
+		);
+		assert.equal(p.typeOptions?.maxValue, maximum, `${where}: wrong documented maximum`);
+	}
+});
+
+test('an optional parameter sits inside a collection, not on the main panel', () => {
+	// n8n review: the node's own panel carries what defines the call. Anything
+	// optional goes behind Options, Filters or Additional Fields.
+	const topLevel = new Set(props.map((p) => p.name));
+	const anywhere = new Set([...walk(props)].map((p) => p.name));
+
+	for (const name of ['extractFields', 'status']) {
+		assert.ok(anywhere.has(name), `${name} is gone entirely`);
+		assert.ok(!topLevel.has(name), `${name} is still on the main panel`);
+	}
+});
+
+test('Adaptive hides the options the API rejects alongside it', () => {
+	// `js_render` and `premium_proxy` are 400 REQ_INVALID_PARAMS with mode=auto,
+	// and Screenshot needs js_render, so all three are Manual only. `wait`,
+	// `waitFor` and `jsInstructions` are deliberately left alone: our own docs
+	// disagree about those, and hiding a working option is the worse mistake.
+	const collection = props.find(
+		(p) =>
+			p.type === 'collection' && p.displayOptions?.show?.operation?.includes('scrape'),
+	);
+	assert.ok(collection, 'Scrape has no Options collection');
+	const byName = Object.fromEntries(collection.options.map((o) => [o.name, o]));
+
+	for (const name of ['jsRender', 'premiumProxy', 'screenshot']) {
+		assert.deepEqual(
+			byName[name]?.displayOptions?.show,
+			{ '/mode': ['manual'] },
+			`${name} is offered under Adaptive, where the API refuses it`,
+		);
+	}
+	for (const name of ['wait', 'waitFor', 'jsInstructions']) {
+		assert.equal(byName[name]?.displayOptions, undefined, `${name} should stay available`);
+	}
+});
+
+test('no action label mangles an acronym', () => {
+	// n8n's linter title-cases every action, which turned "URLs" into "Ur Ls".
+	for (const op of operations) {
+		for (const o of op.options) {
+			assert.doesNotMatch(
+				o.action,
+				/\b(ur ls|ur l|ap i|ht ml|pd f)\b/i,
+				`${o.value}: action label reads "${o.action}"`,
+			);
+		}
+	}
+});
